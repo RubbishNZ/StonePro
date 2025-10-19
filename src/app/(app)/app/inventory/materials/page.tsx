@@ -5,7 +5,7 @@ import { requireUserAndOrg } from "@/lib/server/organizations";
 import { MaterialsCatalog } from "./materials-catalog";
 
 export const metadata: Metadata = {
-  title: "Materials catalog",
+  title: "Slab Inventory",
 };
 
 export type MaterialRecord = {
@@ -46,7 +46,7 @@ export default async function MaterialsCatalogPage() {
     return (
       <div className="space-y-4">
         <header className="space-y-1">
-          <h1 className="text-3xl font-semibold text-slate-900">Materials catalog</h1>
+          <h1 className="text-3xl font-semibold text-slate-900">Slab Inventory</h1>
           <p className="text-sm text-slate-600">
             Create reusable material definitions for slabs, remnants, and special-order stock.
           </p>

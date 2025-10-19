@@ -313,7 +313,7 @@ export function MaterialsCatalog({ materials }: MaterialsCatalogProps) {
     <div className="space-y-6">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="space-y-1.5">
-          <h1 className="text-3xl font-semibold text-slate-900">Materials catalog</h1>
+          <h1 className="text-3xl font-semibold text-slate-900">Slab Inventory</h1>
           <p className="text-sm text-slate-600">
             Define surfaces and finishes once, then reuse them when receiving and scheduling jobs.
           </p>

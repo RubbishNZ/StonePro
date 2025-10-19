@@ -58,7 +58,7 @@ export const appNavSections: AppNavSection[] = [
         badge: "Beta",
       },
       {
-        label: "Materials catalog",
+        label: "Slab Inventory",
         href: "/app/inventory/materials",
         icon: PackageSearch,
       },
