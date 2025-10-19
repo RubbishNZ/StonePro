@@ -6,12 +6,6 @@ export const metadata: Metadata = {
   title: "Workspace setup",
 };
 
-type MembershipRow = {
-  org_id: string;
-  role: string;
-  status: string;
-};
-
 export default async function SetupPage() {
   const supabase = createSupabaseServerClient();
 
@@ -19,101 +13,76 @@ export default async function SetupPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  let profileDefaultOrg: string | null = null;
-  let memberships: MembershipRow[] = [];
+  let profileTenantId: string | null = null;
+  let profileRole: string | null = null;
+  let tenantName: string | null = null;
 
   if (user) {
-    const [{ data: profile }, { data: memberRows }] = await Promise.all([
-      supabase
-        .from("profiles")
-        .select("default_org_id")
-        .eq("user_id", user.id)
-        .maybeSingle(),
-      supabase
-        .from("org_members")
-        .select("org_id, role, status")
-        .eq("user_id", user.id)
-        .eq("status", "active")
-        .order("created_at", { ascending: true }),
-    ]);
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("tenant_id, role, tenants(name)")
+      .eq("user_id", user.id)
+      .maybeSingle();
 
-    profileDefaultOrg = profile?.default_org_id ?? null;
-    memberships = memberRows ?? [];
+    profileTenantId = profile?.tenant_id ?? null;
+    profileRole = profile?.role ?? null;
+    tenantName = profile?.tenants?.name ?? null;
   }
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-6 rounded-3xl border border-dashed border-white/20 bg-slate-950/60 p-8 text-slate-200">
-      <h1 className="text-2xl font-semibold text-white">Finish workspace setup</h1>
-      <p className="text-sm text-slate-300">
-        You don’t have an active StoneOpsPro workspace yet. Ask an administrator
-        to invite you to an organization or set a default workspace in Supabase
-        by updating your profile and org membership records.
+    <div className="mx-auto flex max-w-2xl flex-col gap-6 rounded-3xl border border-dashed border-slate-300 bg-white p-8 text-slate-700 shadow-sm">
+      <h1 className="text-2xl font-semibold text-slate-900">Finish workspace setup</h1>
+      <p className="text-sm text-slate-600">
+        You don’t have an active StoneOpsPro workspace yet. Create a tenant and
+        link your profile to it in Supabase.
       </p>
-      <ul className="list-disc space-y-2 pl-5 text-sm text-slate-300">
+      <ol className="list-decimal space-y-2 pl-5 text-sm text-slate-600">
         <li>
-          Ensure your user appears in <code>org_members</code> with status <strong>active</strong>.
+          Insert a row into <code>tenants</code> (e.g., your company name).
         </li>
         <li>
-          Optionally set <code>profiles.default_org_id</code> so we can route you automatically.
+          Insert a row into <code>profiles</code> with your <code>user_id</code>,
+          the <code>tenant_id</code> from step 1, and a <code>role</code> of
+          <code>'admin'</code> or <code>'member'</code>.
         </li>
-      </ul>
+      </ol>
 
-      <div className="rounded-2xl border border-white/10 bg-slate-900/80 p-5">
-        <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">
+      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+        <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
           Current Supabase state
         </h2>
-        <dl className="mt-4 grid gap-3 text-sm text-slate-300">
+        <dl className="mt-4 grid gap-3 text-sm text-slate-600">
           <div className="flex flex-col gap-1">
             <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">
               Auth user ID
             </dt>
-            <dd className="font-mono text-xs text-slate-400">{user?.id ?? "not signed in"}</dd>
+            <dd className="font-mono text-xs text-slate-500">{user?.id ?? "not signed in"}</dd>
           </div>
           <div className="flex flex-col gap-1">
             <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              profiles.default_org_id
+              profiles.tenant_id
             </dt>
-            <dd className="font-mono text-xs text-slate-200">
-              {profileDefaultOrg ?? "null"}
+            <dd className="font-mono text-xs text-slate-600">
+              {profileTenantId ?? "null"}
             </dd>
           </div>
+          <div className="flex flex-col gap-1">
+            <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              profiles.role
+            </dt>
+            <dd className="font-mono text-xs text-slate-600">{profileRole ?? "null"}</dd>
+          </div>
+          <div className="flex flex-col gap-1">
+            <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              tenant name
+            </dt>
+            <dd className="font-mono text-xs text-slate-600">{tenantName ?? "null"}</dd>
+          </div>
         </dl>
-
-        <div className="mt-5">
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-            org_members rows for this user
-          </h3>
-          {memberships.length === 0 ? (
-            <p className="mt-2 text-xs text-slate-500">No memberships found.</p>
-          ) : (
-            <div className="mt-3 overflow-hidden rounded-xl border border-white/10">
-              <table className="w-full text-left text-xs text-slate-200">
-                <thead className="bg-slate-900/70 text-slate-400">
-                  <tr>
-                    <th className="px-3 py-2 font-semibold">org_id</th>
-                    <th className="px-3 py-2 font-semibold">role</th>
-                    <th className="px-3 py-2 font-semibold">status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {memberships.map((membership) => (
-                    <tr key={membership.org_id} className="odd:bg-slate-950/40">
-                      <td className="px-3 py-2 font-mono text-[11px]">
-                        {membership.org_id}
-                      </td>
-                      <td className="px-3 py-2">{membership.role}</td>
-                      <td className="px-3 py-2">{membership.status}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
       </div>
 
       <p className="text-xs text-slate-500">
-        Once your membership is configured, refresh the page to continue.
+        Once your profile is linked to a tenant, refresh the page to continue.
       </p>
     </div>
   );

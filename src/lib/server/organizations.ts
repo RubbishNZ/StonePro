@@ -19,53 +19,37 @@ export type ActiveOrgResult = {
   };
 };
 
+// Adapted to StoneOpsPro schema: profiles(user_id, tenant_id, role) -> tenants(id, name)
 export async function resolveActiveOrg(
   supabase: GenericSupabaseClient,
   userId: string
 ): Promise<ActiveOrgResult> {
-  const { data, error } = await supabase
-    .from("org_members")
-    .select("org_id, role, status, organizations(id, name, slug)")
+  const { data: profile, error } = await supabase
+    .from("profiles")
+    .select("tenant_id, role, tenants(id, name)")
     .eq("user_id", userId)
-    .eq("status", "active")
-    .order("created_at", { ascending: true });
+    .maybeSingle();
 
   if (error) {
     throw error;
   }
 
-  if (!data || data.length === 0) {
-    throw new Error("No active organization found for this user.");
+  if (!profile || !profile.tenant_id) {
+    throw new Error("No tenant assigned for this user.");
   }
 
-  const membership = data[0];
-
-  let org = membership.organizations ?? null;
-
-  if (!org) {
-    const { data: fetchedOrg, error: fetchedOrgError } = await supabase
-      .from("organizations")
-      .select("id, name, slug")
-      .eq("id", membership.org_id)
-      .maybeSingle();
-
-    if (fetchedOrgError) {
-      console.warn("Unable to read organization record via RLS", fetchedOrgError);
-    }
-
-    org = fetchedOrg ?? {
-      id: membership.org_id,
-      name: "Workspace",
-      slug: null,
-    };
-  }
+  const org = profile.tenants ?? {
+    id: profile.tenant_id,
+    name: "Workspace",
+    slug: null,
+  };
 
   return {
     org,
     membership: {
-      org_id: membership.org_id,
-      role: membership.role,
-      status: membership.status,
+      org_id: profile.tenant_id,
+      role: profile.role ?? "member",
+      status: "active",
     },
   };
 }
