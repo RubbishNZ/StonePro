@@ -14,7 +14,7 @@ export function AppSidebar({ orgName }: AppSidebarProps) {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden w-72 flex-col border-r border-slate-900/40 bg-slate-950/80 p-6 text-sm text-slate-300 xl:flex">
+    <aside className="hidden w-72 flex-col border-r border-slate-900/40 bg-slate-950/80 p-6 text-sm text-slate-300 lg:flex">
       <div className="mb-8 space-y-1">
         <div className="text-xs uppercase tracking-[0.3em] text-slate-500">Workspace</div>
         <div className="text-lg font-semibold text-white">{orgName ?? "StoneOpsPro"}</div>

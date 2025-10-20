@@ -3,7 +3,6 @@ import {
   BadgeCheck,
   ClipboardList,
   LayoutDashboard,
-  Layers,
   PackageSearch,
   Repeat,
   ScanBarcode,
@@ -45,12 +44,6 @@ export const appNavSections: AppNavSection[] = [
   {
     title: "Inventory",
     links: [
-      {
-        label: "Inventory browser",
-        href: "/app/inventory",
-        icon: Layers,
-        description: "Slabs, remnants, bundles",
-      },
       {
         label: "Receiving",
         href: "/app/inventory/receive",
