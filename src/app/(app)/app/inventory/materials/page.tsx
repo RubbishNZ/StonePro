@@ -29,6 +29,7 @@ export type MaterialRecord = {
   supplier_reference?: string | null;
   slab_length_mm?: number | null;
   slab_width_mm?: number | null;
+  status?: string | null;
   updated_at?: string | null;
   created_at?: string | null;
   [key: string]: unknown;

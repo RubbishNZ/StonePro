@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState, useTransition } from 'react';
 
 import {
   Bookmark,
@@ -20,6 +20,7 @@ import {
   type FilterBarDropdownControl,
 } from '@/components/ui/filter-bar';
 import { SidePanel } from '@/components/ui/side-panel';
+import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 
 import type { MaterialRecord } from './page';
 import { MaterialForm } from './materials-form';
@@ -36,11 +37,14 @@ type MaterialsCatalogProps = {
 
 export function MaterialsCatalog({ materials }: MaterialsCatalogProps) {
   const router = useRouter();
+  const supabase = createSupabaseBrowserClient();
 
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState<string[]>([]);
   const [finishFilter, setFinishFilter] = useState<string[]>([]);
   const [panelState, setPanelState] = useState<PanelState>({ mode: 'closed' });
+  const [updatingIds, setUpdatingIds] = useState<Set<string>>(new Set());
+  const [isPending, startTransition] = useTransition();
 
   const selectedMaterial = useMemo(() => {
     if (panelState.mode === 'detail' || panelState.mode === 'edit') {
@@ -178,11 +182,37 @@ export function MaterialsCatalog({ materials }: MaterialsCatalogProps) {
   }, []);
 
   const handleFormSuccess = useCallback(
-    (_material: MaterialRecord) => {
+    () => {
       closePanel();
       router.refresh();
     },
     [closePanel, router]
+  );
+
+  const statusOptions = useMemo(
+    () => ['Orderable', 'On Order', 'In Stock', 'Reserved', 'Consumed'] as const,
+    []
+  );
+
+  const setStatus = useCallback(
+    async (material: MaterialRecord, nextStatus: string) => {
+      if (!material?.id || !material?.tenant_id) return;
+      setUpdatingIds((prev) => new Set(prev).add(material.id));
+      const { error } = await supabase
+        .from('materials')
+        .update({ status: nextStatus })
+        .eq('id', material.id)
+        .eq('tenant_id', material.tenant_id);
+      setUpdatingIds((prev) => {
+        const copy = new Set(prev);
+        copy.delete(material.id);
+        return copy;
+      });
+      if (!error) {
+        startTransition(() => router.refresh());
+      }
+    },
+    [router, supabase]
   );
 
   const tableColumns = useMemo<DataTableColumn<MaterialRecord>[]>(() => {
@@ -285,6 +315,34 @@ export function MaterialsCatalog({ materials }: MaterialsCatalogProps) {
       cell: (row) => formatCurrency(row.unit_cost, row.currency),
     };
 
+    const statusColumn: DataTableColumn<MaterialRecord> = {
+      id: 'status',
+      header: 'Status',
+      sortable: true,
+      width: 'w-[160px]',
+      sortValue: (row) => row.status ?? '',
+      align: 'center',
+      cell: (row) => (
+        <div className="inline-flex items-center gap-2">
+          <StatusBadge status={row.status} />
+          <select
+            aria-label="Update status"
+            className="rounded-full border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 focus:outline-none"
+            value={row.status ?? ''}
+            onChange={(e) => setStatus(row, e.target.value)}
+            disabled={updatingIds.has(row.id) || isPending}
+          >
+            <option value="">—</option>
+            {statusOptions.map((opt) => (
+              <option key={opt} value={opt}>
+                {opt}
+              </option>
+            ))}
+          </select>
+        </div>
+      ),
+    };
+
     const updatedColumn: DataTableColumn<MaterialRecord> = {
       id: 'updated_at',
       header: 'Last updated',
@@ -305,9 +363,10 @@ export function MaterialsCatalog({ materials }: MaterialsCatalogProps) {
       colourColumn,
       thicknessColumn,
       unitCostColumn,
+      statusColumn,
       updatedColumn,
     ];
-  }, [openDetail]);
+  }, [openDetail, isPending, setStatus, statusOptions, updatingIds]);
 
   return (
     <div className="space-y-6">
@@ -403,7 +462,14 @@ export function MaterialsCatalog({ materials }: MaterialsCatalogProps) {
           ) : null
         }
       >
-        {selectedMaterial ? <MaterialDetails material={selectedMaterial} /> : null}
+        {selectedMaterial ? (
+          <MaterialDetails
+            material={selectedMaterial}
+            onChangeStatus={(next) => setStatus(selectedMaterial, next)}
+            statusOptions={statusOptions as readonly string[]}
+            pending={updatingIds.has(selectedMaterial.id) || isPending}
+          />
+        ) : null}
       </SidePanel>
 
       <SidePanel
@@ -438,11 +504,41 @@ export function MaterialsCatalog({ materials }: MaterialsCatalogProps) {
   );
 }
 
-function MaterialDetails({ material }: { material: MaterialRecord }) {
+function MaterialDetails({
+  material,
+  onChangeStatus,
+  statusOptions,
+  pending,
+}: {
+  material: MaterialRecord;
+  onChangeStatus: (status: string) => void;
+  statusOptions: readonly string[];
+  pending: boolean;
+}) {
   const items = buildDetailEntries(material);
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+        <div className="flex items-center gap-3">
+          <StatusBadge status={material.status} />
+          <span className="text-sm text-slate-600">Current status</span>
+        </div>
+        <select
+          aria-label="Update status"
+          className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-700 focus:outline-none"
+          value={material.status ?? ''}
+          onChange={(e) => onChangeStatus(e.target.value)}
+          disabled={pending}
+        >
+          <option value="">—</option>
+          {statusOptions.map((opt) => (
+            <option key={opt} value={opt}>
+              {opt}
+            </option>
+          ))}
+        </select>
+      </div>
       {material.description ? (
         <p className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
           {material.description}
@@ -487,6 +583,44 @@ function buildDetailEntries(material: MaterialRecord): DetailEntry[] {
   entries.push({ label: 'Typical slab size', value: formatDimensions(material.slab_length_mm, material.slab_width_mm) });
 
   return entries.filter((entry) => entry.value != null && entry.value !== '');
+}
+
+function StatusBadge({ status }: { status: unknown }) {
+  const value = typeof status === 'string' ? status : '';
+  const theme = getStatusTheme(value);
+  if (!value) {
+    return (
+      <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+        —
+      </span>
+    );
+  }
+  return (
+    <span
+      className={
+        'rounded-full px-2.5 py-1 text-xs font-semibold uppercase tracking-wide ' + theme
+      }
+    >
+      {value}
+    </span>
+  );
+}
+
+function getStatusTheme(status: string) {
+  switch (status) {
+    case 'Orderable':
+      return 'bg-sky-100 text-sky-700';
+    case 'On Order':
+      return 'bg-amber-100 text-amber-700';
+    case 'In Stock':
+      return 'bg-emerald-100 text-emerald-700';
+    case 'Reserved':
+      return 'bg-violet-100 text-violet-700';
+    case 'Consumed':
+      return 'bg-slate-200 text-slate-700';
+    default:
+      return 'bg-slate-100 text-slate-600';
+  }
 }
 
 function normaliseString(value: unknown) {
