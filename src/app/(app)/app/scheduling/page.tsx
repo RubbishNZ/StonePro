@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 const mockSchedule = [
   {
     resource: "CNC 1",
@@ -23,7 +25,7 @@ const mockSchedule = [
 ];
 
 export const metadata = {
-  title: "Scheduling",
+  title: "Factory dashboard",
 };
 
 export default function SchedulingPage() {
@@ -31,7 +33,7 @@ export default function SchedulingPage() {
     <div className="space-y-6">
       <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-semibold text-white">Scheduling</h1>
+          <h1 className="text-3xl font-semibold text-white">Factory dashboard</h1>
           <p className="text-sm text-slate-400">
             Drag-and-drop board with crews, machines, and conflict detection.
           </p>
@@ -40,6 +42,12 @@ export default function SchedulingPage() {
           <button className="rounded-full border border-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:border-white/30 hover:bg-white/10">
             Manage resources
           </button>
+          <Link
+            href="/app/scheduling/factory-scheduling"
+            className="rounded-full border border-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:border-white/30 hover:bg-white/10"
+          >
+            Open scheduler
+          </Link>
           <button className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-slate-200">
             Create job
           </button>

@@ -1,9 +1,11 @@
 import type { LucideIcon } from "lucide-react";
 import {
   BadgeCheck,
+  CalendarClock,
   ClipboardList,
+  FilePlus2,
   LayoutDashboard,
-  PackageSearch,
+  Layers,
   Repeat,
   ScanBarcode,
   Search,
@@ -45,15 +47,25 @@ export const appNavSections: AppNavSection[] = [
     title: "Inventory",
     links: [
       {
+        label: "Inventory dashboard",
+        href: "/app/inventory/dashboard",
+        icon: LayoutDashboard,
+      },
+      {
         label: "Receiving",
         href: "/app/inventory/receive",
         icon: ScanBarcode,
         badge: "Beta",
       },
       {
-        label: "Slab Inventory",
+        label: "Slab inventory",
         href: "/app/inventory/materials",
-        icon: PackageSearch,
+        icon: Layers,
+      },
+      {
+        label: "Inventory settings",
+        href: "/app/inventory/settings",
+        icon: Settings,
       },
       {
         label: "Purchase orders",
@@ -72,6 +84,51 @@ export const appNavSections: AppNavSection[] = [
         href: "/app/inventory/reservations",
         icon: BadgeCheck,
         disabled: true,
+      },
+    ],
+  },
+  {
+    title: "Quoting",
+    links: [
+      {
+        label: "Quoting dashboard",
+        href: "/app/quotes",
+        icon: LayoutDashboard,
+      },
+      {
+        label: "Quote settings",
+        href: "/app/quotes/settings",
+        icon: Settings,
+      },
+      {
+        label: "New quote",
+        href: "/app/quotes/new",
+        icon: FilePlus2,
+      },
+      {
+        label: "Existing quotes",
+        href: "/app/quotes/existing",
+        icon: ClipboardList,
+      },
+    ],
+  },
+  {
+    title: "Scheduling",
+    links: [
+      {
+        label: "Factory dashboard",
+        href: "/app/scheduling",
+        icon: LayoutDashboard,
+      },
+      {
+        label: "Factory scheduling",
+        href: "/app/scheduling/factory-scheduling",
+        icon: CalendarClock,
+      },
+      {
+        label: "Factory settings",
+        href: "/app/scheduling/settings",
+        icon: Settings,
       },
     ],
   },
