@@ -1,9 +1,9 @@
 import type { LucideIcon } from "lucide-react";
 import {
   BadgeCheck,
+  BarChart3,
   ClipboardList,
   LayoutDashboard,
-  Layers,
   PackageSearch,
   Repeat,
   ScanBarcode,
@@ -46,10 +46,9 @@ export const appNavSections: AppNavSection[] = [
     title: "Inventory",
     links: [
       {
-        label: "Inventory browser",
-        href: "/app/inventory",
-        icon: Layers,
-        description: "Slabs, remnants, bundles",
+        label: "Inventory Dashboard",
+        href: "/app/inventory/dashboard",
+        icon: BarChart3,
       },
       {
         label: "Receiving",

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import {
   ArrowRight,
+  BarChart3,
   ClipboardList,
   Layers,
   MapPin,
@@ -156,23 +157,22 @@ export default async function DashboardPage() {
 
   const quickActions = [
     {
-      title: "Browse inventory",
-      description: "Filter slabs and remnants by status, material, and location.",
-      href: "/app/inventory",
-      icon: Layers,
+      title: "Inventory dashboard",
+      description: "Review KPIs across stock levels, reservations, and inbound loads.",
+      href: "/app/inventory/dashboard",
+      icon: BarChart3,
+    },
+    {
+      title: "Slab inventory",
+      description: "Manage slab definitions, finishes, and supplier catalogs.",
+      href: "/app/inventory/materials",
+      icon: PackageSearch,
     },
     {
       title: "Receive items",
       description: "Scan labels, capture photos, and assign storage locations.",
       href: "/app/inventory/receive",
       icon: ScanBarcode,
-    },
-    {
-      title: "Materials catalog",
-      description: "Create materials, finishes, and supplier links.",
-      href: "#",
-      icon: PackageSearch,
-      disabled: true,
     },
   ];
 
@@ -225,8 +225,8 @@ export default async function DashboardPage() {
               <h2 className="text-lg font-semibold text-slate-900">Latest inventory activity</h2>
               <p className="text-sm text-slate-600">Recent receipts and adjustments.</p>
             </div>
-            <a className="text-xs font-semibold text-sky-600" href="/app/inventory">
-              View all inventory →
+            <a className="text-xs font-semibold text-sky-600" href="/app/inventory/dashboard">
+              Open inventory dashboard →
             </a>
           </div>
           <div className="mt-6 space-y-4">
